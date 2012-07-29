@@ -161,6 +161,7 @@ Plik nagłówkowy API PyOpenColorIO.
 %patch2 -p1
 
 %build
+# required for cmake to find JNI headers/libs when lib64 is in use
 %{?with_java:export JAVA_HOME=%{_jvmlibdir}/java}
 
 install -d build
