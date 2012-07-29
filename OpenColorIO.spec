@@ -159,6 +159,8 @@ Plik nagłówkowy API PyOpenColorIO.
 %patch1 -p1
 
 %build
+%{?with_java:export JAVA_HOME=%{_jvmlibdir}/java}
+
 install -d build
 cd build
 %cmake .. \
