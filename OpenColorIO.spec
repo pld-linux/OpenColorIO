@@ -1,4 +1,6 @@
-# TODO: truelight, nuke
+# TODO (proprietary?):
+# - truelight http://www.filmlight.ltd.uk/products/truelight/overview_tl.php
+# - nuke: http://docs.thefoundry.co.uk/products/nuke/
 #
 # Conditional build:
 %bcond_without	oiio	# OpenImageIO-dependent apps (ocioconvert,ociodisplay)
