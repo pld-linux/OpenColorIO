@@ -1,0 +1,11 @@
+--- imageworks-OpenColorIO-a16d9ac/src/core/CMakeLists.txt.orig	2012-03-12 20:13:59.000000000 +0100
++++ imageworks-OpenColorIO-a16d9ac/src/core/CMakeLists.txt	2012-07-29 12:10:10.859355425 +0200
+@@ -66,7 +66,7 @@
+         VERSION ${OCIO_VERSION}
+         SOVERSION ${SOVERSION})
+     
+-    install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
++    install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})
+ endif()
+ 
+ # public interface

@@ -23,6 +23,7 @@ Source0:	https://github.com/imageworks/OpenColorIO/tarball/v%{version}#/%{name}-
 # Source0-md5:	7bd5521d8671be9f9f92339b32497908
 Patch0:		%{name}-system-libs.patch
 Patch1:		%{name}-java.patch
+Patch2:		%{name}-libsuffix.patch
 URL:		http://opencolorio.org/
 # g++ with tr1 support or...
 #BuildRequires:	boost-devel >= 1.34
@@ -157,6 +158,7 @@ Plik nagłówkowy API PyOpenColorIO.
 %setup -q -n imageworks-OpenColorIO-a16d9ac
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
 
 %build
 %{?with_java:export JAVA_HOME=%{_jvmlibdir}/java}
