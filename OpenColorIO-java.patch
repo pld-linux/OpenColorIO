@@ -1,0 +1,21 @@
+--- imageworks-OpenColorIO-a16d9ac/CMakeLists.txt.orig	2012-07-28 20:56:34.841655834 +0200
++++ imageworks-OpenColorIO-a16d9ac/CMakeLists.txt	2012-07-29 08:42:26.369878509 +0200
+@@ -278,7 +278,7 @@
+ 
+ if(OCIO_BUILD_JNIGLUE)
+     OCIOFindJava()
+-    if(Java_FOUND)
++    if(JAVA_FOUND)
+       add_subdirectory(src/jniglue)
+     else()
+       messageonce("Java bindings will not be built as we can't find Java")
+--- imageworks-OpenColorIO-a16d9ac/src/jniglue/JNIUtil.h.orig	2012-03-12 20:13:59.000000000 +0100
++++ imageworks-OpenColorIO-a16d9ac/src/jniglue/JNIUtil.h	2012-07-29 08:50:30.273191536 +0200
+@@ -29,6 +29,7 @@
+ #ifndef INCLUDED_OCIO_JNIUTIL_H
+ #define INCLUDED_OCIO_JNIUTIL_H
+ 
++#include <stdint.h>
+ #include <sstream>
+ #include <vector>
+ #include "OpenColorIOJNI.h"
