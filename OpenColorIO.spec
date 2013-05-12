@@ -15,12 +15,12 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	1.0.6
-Release:	2
+Version:	1.0.8
+Release:	1
 License:	BSD
 Group:		Libraries
-Source0:	https://github.com/imageworks/OpenColorIO/tarball/v%{version}#/%{name}-%{version}.tar.gz
-# Source0-md5:	7bd5521d8671be9f9f92339b32497908
+Source0:	https://github.com/imageworks/OpenColorIO/tarball/v%{version}/%{name}-%{version}.tar.gz
+# Source0-md5:	9838f5f1cf624a3d1253241f22e2179a
 Patch0:		%{name}-system-libs.patch
 Patch1:		%{name}-java.patch
 Patch2:		%{name}-libsuffix.patch
@@ -155,7 +155,7 @@ Header file for PyOpenColorIO API.
 Plik nagłówkowy API PyOpenColorIO.
 
 %prep
-%setup -q -n imageworks-OpenColorIO-a16d9ac
+%setup -q -n imageworks-OpenColorIO-8883824
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
@@ -173,6 +173,8 @@ cd build
 	-DOCIO_STATIC_JNIGLUE=OFF \
 %endif
 	%{!?with_sse2:-DOCIO_USE_SSE=OFF} \
+	-DUSE_EXTERNAL_TINYXML=ON \
+	-DUSE_EXTERNAL_YAML=ON \
 	-DPYTHON_INCLUDE_LIB_PREFIX=ON
 
 %{__make}
