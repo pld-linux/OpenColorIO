@@ -24,6 +24,8 @@ Source0:	https://github.com/imageworks/OpenColorIO/tarball/v%{version}/%{name}-%
 Patch0:		%{name}-system-libs.patch
 Patch1:		%{name}-java.patch
 Patch2:		%{name}-libsuffix.patch
+# for yaml-cpp 0.5.0 (unfinished)
+Patch3:		%{name}-yaml-cpp.patch
 URL:		http://opencolorio.org/
 # g++ with tr1 support or...
 #BuildRequires:	boost-devel >= 1.34
@@ -35,6 +37,7 @@ BuildRequires:	python-devel
 %{?with_docs:BuildRequires:	sphinx-pdg >= 1.1}
 BuildRequires:	tinyxml-devel >= 2.6.1
 BuildRequires:	yaml-cpp-devel >= 0.2.6
+BuildRequires:	yaml-cpp-devel < 0.4.0
 %if %{with opengl}
 BuildRequires:	OpenGL-devel
 BuildRequires:	OpenGL-glut-devel
@@ -174,8 +177,7 @@ cd build
 %endif
 	%{!?with_sse2:-DOCIO_USE_SSE=OFF} \
 	-DUSE_EXTERNAL_TINYXML=ON \
-	-DUSE_EXTERNAL_YAML=ON \
-	-DPYTHON_INCLUDE_LIB_PREFIX=ON
+	-DUSE_EXTERNAL_YAML=ON
 
 %{__make}
 
@@ -184,10 +186,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
-
-# we use PYTHON_INCLUDE_LIB_PREFIX=ON so library is useful as C++ API
-# but allow it to be loaded without lib prefix
-ln -sf $(basename $RPM_BUILD_ROOT%{_libdir}/libPyOpenColorIO.so.*.*.*) $RPM_BUILD_ROOT%{_libdir}/PyOpenColorIO.so
 
 # not needed when installing to /usr
 %{__rm} $RPM_BUILD_ROOT%{_datadir}/ocio/setup_ocio.sh
@@ -244,16 +242,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %ghost %{_libdir}/libOpenColorIO-JNI.so.1
 %attr(755,root,root) %{_libdir}/libOpenColorIO-JNI.so
 %dir %{_datadir}/ocio
-%{_datadir}/ocio/OpenColorIO-1.0.6.jar
+%{_datadir}/ocio/OpenColorIO-%{version}.jar
 %endif
 
 %files -n python-OpenColorIO
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libPyOpenColorIO.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libPyOpenColorIO.so.1
-%attr(755,root,root) %{_libdir}/PyOpenColorIO.so
+%attr(755,root,root) %{py_sitedir}/PyOpenColorIO.so
 
 %files -n python-OpenColorIO-devel
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libPyOpenColorIO.so
 %{_includedir}/PyOpenColorIO

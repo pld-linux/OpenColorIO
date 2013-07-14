@@ -1,0 +1,215 @@
+--- imageworks-OpenColorIO-8883824/src/core/Config.cpp.orig	2012-12-12 00:21:23.000000000 +0100
++++ imageworks-OpenColorIO-8883824/src/core/Config.cpp	2013-05-25 18:28:05.264387301 +0200
+@@ -240,35 +240,27 @@ OCIO_NAMESPACE_ENTER
+         if(node.Tag() != "View")
+             return;
+         
+-        std::string key, stringval;
+-        
+-        for (YAML::Iterator iter = node.begin();
++        for (YAML::const_iterator iter = node.begin();
+              iter != node.end();
+              ++iter)
+         {
+-            iter.first() >> key;
++	    std::string key = iter->first.as<std::string>();
+             
+             if(key == "name")
+             {
+-                if (iter.second().Type() != YAML::NodeType::Null && 
+-                    iter.second().Read<std::string>(stringval))
+-                    v.name = stringval;
++                    v.name = iter->second.as<std::string>();
+             }
+             else if(key == "colorspace")
+             {
+-                if (iter.second().Type() != YAML::NodeType::Null && 
+-                    iter.second().Read<std::string>(stringval))
+-                    v.colorspace = stringval;
++                    v.colorspace = iter->second.as<std::string>();
+             }
+             else if(key == "looks" || key == "look")
+             {
+-                if (iter.second().Type() != YAML::NodeType::Null && 
+-                    iter.second().Read<std::string>(stringval))
+-                    v.looks = stringval;
++                    v.looks = iter->second.as<std::string>();
+             }
+             else
+             {
+-                LogUnknownKeyWarning(node.Tag(), iter.first());
++                LogUnknownKeyWarning(node.Tag(), iter->first);
+             }
+         }
+         
+@@ -391,7 +383,24 @@ OCIO_NAMESPACE_ENTER
+     
+     
+     } // namespace
+-    
++
++}
++
++namespace YAML {
++    template<>
++    struct convert<OCIO_NAMESPACE::View> {
++	static bool decode(const Node &n, View &v)
++	{
++            if(node.Tag() != "View")
++                return false;
++	    n >> v;
++	    return true;
++	}
++    };
++}
++
++OCIO_NAMESPACE_ENTER
++{
+     class Config::Impl
+     {
+     public:
+@@ -1658,13 +1667,11 @@ OCIO_NAMESPACE_ENTER
+     {
+         try
+         {
+-            YAML::Parser parser(istream);
+-            YAML::Node node;
+-            parser.GetNextDocument(node);
++            YAML::Node node = YAML::Load(istream);
+             
+             // check profile version
+             int profile_version = 0;
+-            if(node.FindValue("ocio_profile_version") == NULL)
++            if(!node["ocio_profile_version"])
+             {
+                 std::ostringstream os;
+                 os << "The specified file ";
+@@ -1672,7 +1679,7 @@ OCIO_NAMESPACE_ENTER
+                 throw Exception (os.str().c_str());
+             }
+             
+-            node["ocio_profile_version"] >> profile_version;
++            profile_version = node["ocio_profile_version"].as<int>();
+             if(profile_version > 1)
+             {
+                 std::ostringstream os;
+@@ -1690,40 +1697,30 @@ OCIO_NAMESPACE_ENTER
+             }
+             
+             
+-            std::string key, stringval;
+-            bool boolval = false;
+-            
+-            for (YAML::Iterator iter = node.begin();
++            for (YAML::iterator iter = node.begin();
+                  iter != node.end();
+                  ++iter)
+             {
+-                iter.first() >> key;
++		std::string key = iter->first.as<std::string>();
+                 
+                 if(key == "ocio_profile_version") { } // Already handled above.
+                 else if(key == "search_path" || key == "resource_path")
+                 {
+-                    if (iter.second().Type() != YAML::NodeType::Null && 
+-                        iter.second().Read<std::string>(stringval))
+-                        context_->setSearchPath(stringval.c_str());
++                        context_->setSearchPath(iter->second.as<std::string>().c_str());
+                 }
+                 else if(key == "strictparsing")
+                 {
+-                    if (iter.second().Type() != YAML::NodeType::Null && 
+-                        iter.second().Read<bool>(boolval))
+-                        strictParsing_ = boolval;
++                        strictParsing_ = iter->second.as<bool>();
+                 }
+                 else if(key == "description")
+                 {
+-                    if (iter.second().Type() != YAML::NodeType::Null && 
+-                        iter.second().Read<std::string>(stringval))
+-                        description_ = stringval;
++                        description_ = iter->second.as<std::string>();
+                 }
+                 else if(key == "luma")
+                 {
+                     std::vector<float> val;
+-                    if (iter.second().Type() != YAML::NodeType::Null)
+                     {
+-                        iter.second() >> val;
++                        val = iter->second.as< std::vector<float> >();
+                         if(val.size() != 3)
+                         {
+                             std::ostringstream os;
+@@ -1736,46 +1733,35 @@ OCIO_NAMESPACE_ENTER
+                 }
+                 else if(key == "roles")
+                 {
+-                    const YAML::Node& roles = iter.second();
++                    const YAML::Node& roles = iter->second;
+                     if(roles.Type() != YAML::NodeType::Map)
+                     {
+                         std::ostringstream os;
+                         os << "'roles' field needs to be a (name: key) map.";
+                         throw Exception(os.str().c_str());
+                     }
+-                    for (YAML::Iterator it  = roles.begin();
++                    for (YAML::const_iterator it  = roles.begin();
+                                         it != roles.end(); ++it)
+                     {
+-                        std::string k, v;
+-                        it.first() >> k;
+-                        it.second() >> v;
+-                        roles_[pystring::lower(k)] = v;
++                        roles_[pystring::lower(it->first.as<std::string>())] = it->second.as<std::string>();
+                     }
+                 }
+                 else if(key == "displays")
+                 {
+-                    if (iter.second().Type() != YAML::NodeType::Null)
+-                    {
+-                        iter.second() >> displays_;
+-                    }
++                        //displays_ = iter->second.as<DisplayMap>();
++                        iter->second >> displays_;
+                 }
+                 else if(key == "active_displays")
+                 {
+-                    if (iter.second().Type() != YAML::NodeType::Null)
+-                    {
+-                        iter.second() >> activeDisplays_;
+-                    }
++                        activeDisplays_ = iter->second.as<StringVec>();
+                 }
+                 else if(key == "active_views")
+                 {
+-                    if (iter.second().Type() != YAML::NodeType::Null)
+-                    {
+-                        iter.second() >> activeViews_;
+-                    }
++                        activeViews_ = iter->second.as<StringVec>();
+                 }
+                 else if(key == "colorspaces")
+                 {
+-                    const YAML::Node& colorspaces = iter.second();
++                    const YAML::Node& colorspaces = iter->second;
+                     
+                     if(colorspaces.Type() != YAML::NodeType::Sequence)
+                     {
+@@ -1804,7 +1790,7 @@ OCIO_NAMESPACE_ENTER
+                 }
+                 else if(key == "looks")
+                 {
+-                    const YAML::Node& looks = iter.second();
++                    const YAML::Node& looks = iter->second;
+                     
+                     if(looks.Type() != YAML::NodeType::Sequence)
+                     {
+@@ -1833,7 +1819,7 @@ OCIO_NAMESPACE_ENTER
+                 }
+                 else
+                 {
+-                    LogUnknownKeyWarning("profile", iter.first());
++                    LogUnknownKeyWarning("profile", iter->first);
+                 }
+             }
+             
