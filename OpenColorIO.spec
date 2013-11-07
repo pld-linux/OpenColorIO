@@ -16,7 +16,7 @@ Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
 Version:	1.0.8
-Release:	2
+Release:	3
 License:	BSD
 Group:		Libraries
 Source0:	https://github.com/imageworks/OpenColorIO/tarball/v%{version}/%{name}-%{version}.tar.gz
@@ -34,7 +34,10 @@ BuildRequires:	cmake >= 2.8
 BuildRequires:	libstdc++-devel
 BuildRequires:	pkgconfig
 BuildRequires:	python-devel
-%{?with_docs:BuildRequires:	sphinx-pdg >= 1.1}
+%if %{with docs}
+BuildRequires:	sphinx-pdg >= 1.1
+BuildRequires:	texlive-latex-ams
+%endif
 BuildRequires:	tinyxml-devel >= 2.6.1
 BuildRequires:	yaml-cpp-devel >= 0.2.6
 BuildRequires:	yaml-cpp-devel < 0.4.0
