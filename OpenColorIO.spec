@@ -15,17 +15,18 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	1.0.8
-Release:	3
+Version:	1.0.9
+Release:	1
 License:	BSD
 Group:		Libraries
 Source0:	https://github.com/imageworks/OpenColorIO/tarball/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	9838f5f1cf624a3d1253241f22e2179a
+# Source0-md5:	ad3c4ea59c010a18d79276ab9d83af95
 Patch0:		%{name}-system-libs.patch
 Patch1:		%{name}-java.patch
 Patch2:		%{name}-libsuffix.patch
+Patch3:		%{name}-missing.patch
 # for yaml-cpp 0.5.0 (unfinished)
-Patch3:		%{name}-yaml-cpp.patch
+Patch4:		%{name}-yaml-cpp.patch
 URL:		http://opencolorio.org/
 # g++ with tr1 support or...
 #BuildRequires:	boost-devel >= 1.34
@@ -161,10 +162,11 @@ Header file for PyOpenColorIO API.
 Plik nagłówkowy API PyOpenColorIO.
 
 %prep
-%setup -q -n imageworks-OpenColorIO-8883824
+%setup -q -n imageworks-OpenColorIO-2b12063
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
@@ -219,6 +221,7 @@ rm -rf $RPM_BUILD_ROOT
 %files convert
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/ocioconvert
+%attr(755,root,root) %{_bindir}/ociolutimage
 %endif
 
 %if %{with oiio} && %{with opengl}
