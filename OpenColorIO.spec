@@ -16,7 +16,7 @@ Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
 Version:	1.0.9
-Release:	2
+Release:	2.1
 License:	BSD
 Group:		Libraries
 Source0:	https://github.com/imageworks/OpenColorIO/tarball/v%{version}/%{name}-%{version}.tar.gz
@@ -25,7 +25,6 @@ Patch0:		%{name}-system-libs.patch
 Patch1:		%{name}-java.patch
 Patch2:		%{name}-libsuffix.patch
 Patch3:		%{name}-missing.patch
-# for yaml-cpp 0.5.0 (unfinished)
 Patch4:		%{name}-yaml-cpp.patch
 URL:		http://opencolorio.org/
 # g++ with tr1 support or...
@@ -41,7 +40,6 @@ BuildRequires:	texlive-latex-ams
 %endif
 BuildRequires:	tinyxml-devel >= 2.6.1
 BuildRequires:	yaml-cpp-devel >= 0.2.6
-BuildRequires:	yaml-cpp-devel < 0.4.0
 %if %{with opengl}
 BuildRequires:	OpenGL-devel
 BuildRequires:	OpenGL-glut-devel
@@ -167,6 +165,7 @@ Plik nagłówkowy API PyOpenColorIO.
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
