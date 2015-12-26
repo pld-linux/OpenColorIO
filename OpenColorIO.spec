@@ -37,6 +37,7 @@ BuildRequires:	python-devel
 %if %{with docs}
 BuildRequires:	sphinx-pdg >= 1.1
 BuildRequires:	texlive-latex-ams
+BuildRequires:	texlive-xetex
 %endif
 BuildRequires:	tinyxml-devel >= 2.6.1
 BuildRequires:	yaml-cpp-devel >= 0.2.6
