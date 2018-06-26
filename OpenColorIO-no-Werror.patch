@@ -1,0 +1,26 @@
+--- OpenColorIO-1.1.0/src/core/CMakeLists.txt.orig	2018-06-25 22:20:57.554347159 +0200
++++ OpenColorIO-1.1.0/src/core/CMakeLists.txt	2018-06-25 22:21:19.001013583 +0200
+@@ -23,8 +23,6 @@
+     if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+         set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /WX")
+     endif()
+-else()
+-    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -Werror")
+ endif()
+ 
+ # SHARED
+--- OpenColorIO-1.1.0/src/pyglue/CMakeLists.txt.orig	2018-01-05 02:38:27.000000000 +0100
++++ OpenColorIO-1.1.0/src/pyglue/CMakeLists.txt	2018-06-25 22:20:32.314347449 +0200
+@@ -20,12 +20,6 @@
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
+ endif()
+ 
+-# Process all warnings as errors
+-# Unfortunately Windows still has a warning
+-if(UNIX)
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+-endif()
+-
+ find_package(PythonLibs)
+ if(NOT PYTHONLIBS_FOUND)
+     message(FATAL "Python libraries were not found, exiting.")

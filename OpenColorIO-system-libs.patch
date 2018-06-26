@@ -1,19 +1,20 @@
---- imageworks-OpenColorIO-2b12063/docs/CMakeLists.txt.orig	2013-10-09 00:59:34.000000000 +0200
-+++ imageworks-OpenColorIO-2b12063/docs/CMakeLists.txt	2013-11-06 18:54:00.644187011 +0100
-@@ -1,68 +1,5 @@
+--- OpenColorIO-1.1.0/docs/CMakeLists.txt.orig	2018-06-25 19:34:32.201127838 +0200
++++ OpenColorIO-1.1.0/docs/CMakeLists.txt	2018-06-25 19:34:37.424461113 +0200
+@@ -19,72 +19,6 @@
+     set(PYT_EXTDIST_BINPATH ${EXTDIST_BINPATH})
+ endif()
  
- ###############################################################################
--### External Doc Apps ###
--
 -# setuptools
 -# https://pypi.python.org/pypi/setuptools
 -set(SETUPTOOLS_VERSION 1.1.6)
+-
 -ExternalProject_Add(setuptools
 -    URL ${CMAKE_SOURCE_DIR}/ext/setuptools-${SETUPTOOLS_VERSION}.tar.gz
 -    BUILD_IN_SOURCE 1
 -    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTDIST_PYTHONPATH}
--    BUILD_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py build
--    INSTALL_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py install --prefix=${EXTDIST_ROOT}
+-    BUILD_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py build
+-    INSTALL_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py install --prefix=${PYT_LIB_OUTPUT}
+-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/setuptools-prefix/src/setuptools
 -)
 -
 -# docutils
@@ -24,8 +25,9 @@
 -    URL ${CMAKE_SOURCE_DIR}/ext/docutils-${DOCUTILS_VERSION}.tar.gz
 -    BUILD_IN_SOURCE 1
 -    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTDIST_PYTHONPATH}
--    BUILD_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py build
--    INSTALL_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py install --prefix=${EXTDIST_ROOT}
+-    BUILD_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py build
+-    INSTALL_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py install --prefix=${PYT_LIB_OUTPUT}
+-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docutils-prefix/src/docutils
 -)
 -
 -# jinja2
@@ -36,8 +38,9 @@
 -    URL ${CMAKE_SOURCE_DIR}/ext/Jinja2-${JINJA2_VERSION}.tar.gz
 -    BUILD_IN_SOURCE 1
 -    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTDIST_PYTHONPATH}
--    BUILD_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py build
--    INSTALL_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py install --prefix=${EXTDIST_ROOT}
+-    BUILD_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py build
+-    INSTALL_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py install --prefix=${PYT_LIB_OUTPUT}
+-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Jinja2-prefix/src/Jinja2
 -)
 -
 -# Pygments
@@ -48,8 +51,9 @@
 -    URL ${CMAKE_SOURCE_DIR}/ext/Pygments-${PYGMENTS_VERSION}.tar.gz
 -    BUILD_IN_SOURCE 1
 -    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTDIST_PYTHONPATH}
--    BUILD_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py build
--    INSTALL_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py install --prefix=${EXTDIST_ROOT}
+-    BUILD_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py build
+-    INSTALL_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py install --prefix=${PYT_LIB_OUTPUT}
+-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Pygments-prefix/src/Pygments
 -)
 -
 -# sphinx
@@ -61,29 +65,29 @@
 -    PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/Sphinx-${SPHINX_VERSION}.patch
 -    BUILD_IN_SOURCE 1
 -    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTDIST_PYTHONPATH}
--    BUILD_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py build
--    INSTALL_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py install --prefix=${EXTDIST_ROOT} --install-scripts=${EXTDIST_ROOT}/bin
+-    BUILD_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py build
+-    INSTALL_COMMAND ${PYT_PRE_CMD} ${PYTHON} setup.py install --prefix=${PYT_LIB_OUTPUT} --install-scripts=${PYT_EXTDIST_BINPATH}
+-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Sphinx-prefix/src/Sphinx
 -)
 -
--###############################################################################
+ ###############################################################################
  ### Create Doc Targets ###
  
- message(STATUS "Create sphinx conf.py from conf.py.in")
-@@ -93,7 +30,7 @@
- ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h developers/api/OpenColorTypes.rst)
+@@ -122,7 +56,7 @@
+ endif()
  
  add_custom_target(doc ALL
--    COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
-+    COMMAND PYTHONPATH=${PYTHONPATH} sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
+-    COMMAND ${PYT_PRE_CMD} ${EXTDIST_BINPATH}/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
++    COMMAND sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
      DEPENDS
-         OpenColorIO
-         PyOpenColorIO
-@@ -118,7 +55,7 @@
+         ${DEPLIBS}
+         ${CMAKE_BINARY_DIR}/docs/conf.py
+@@ -146,7 +80,7 @@
  if(PDFLATEX_COMPILER)
      
      add_custom_target(latex
--        COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
-+        COMMAND PYTHONPATH=${PYTHONPATH} sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
+-        COMMAND ${PYT_PRE_CMD} ${EXTDIST_BINPATH}/sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
++        COMMAND sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
          DEPENDS
              OpenColorIO
              ${CMAKE_BINARY_DIR}/docs/conf.py

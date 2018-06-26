@@ -15,23 +15,24 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	1.0.9
-Release:	12
+Version:	1.1.0
+Release:	0.1
 License:	BSD
 Group:		Libraries
-Source0:	https://github.com/imageworks/OpenColorIO/tarball/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	ad3c4ea59c010a18d79276ab9d83af95
+Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
+# Source0-md5:	802d8f5b1d1fe316ec5f76511aa611b8
 Patch0:		%{name}-system-libs.patch
 Patch1:		%{name}-java.patch
 Patch2:		%{name}-libsuffix.patch
 Patch3:		%{name}-missing.patch
 Patch4:		%{name}-yaml-cpp.patch
+Patch5:		%{name}-no-Werror.patch
+Patch6:		%{name}-oiio.patch
+Patch7:		%{name}-cmake-dir.patch
 URL:		http://opencolorio.org/
-# g++ with tr1 support or...
-#BuildRequires:	boost-devel >= 1.34
 BuildRequires:	cmake >= 2.8
 %{?with_java:BuildRequires:	jdk}
-BuildRequires:	libstdc++-devel
+BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	pkgconfig
 BuildRequires:	python-devel
 %if %{with docs}
@@ -40,7 +41,7 @@ BuildRequires:	texlive-latex-ams
 BuildRequires:	texlive-xetex
 %endif
 BuildRequires:	tinyxml-devel >= 2.6.1
-BuildRequires:	yaml-cpp-devel >= 0.2.6
+BuildRequires:	yaml-cpp-devel >= 0.3.0
 %if %{with opengl}
 BuildRequires:	OpenGL-devel
 BuildRequires:	OpenGL-glut-devel
@@ -51,7 +52,7 @@ BuildRequires:	OpenImageIO-devel
 BuildRequires:	lcms2-devel >= 2.1
 %endif
 Requires:	tinyxml >= 2.6.1
-Requires:	yaml-cpp >= 0.2.6
+Requires:	yaml-cpp >= 0.3.0
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -79,6 +80,7 @@ Summary:	OpenColorIO convert tool
 Summary(pl.UTF-8):	Narzędzie OpenColorIO do konwersji
 Group:		Applications/Graphics
 Requires:	%{name} = %{version}-%{release}
+Requires:	lcms2 >= 2.1
 
 %description convert
 OpenColorIO convert tool.
@@ -161,12 +163,15 @@ Header file for PyOpenColorIO API.
 Plik nagłówkowy API PyOpenColorIO.
 
 %prep
-%setup -q -n imageworks-OpenColorIO-2b12063
+%setup -q
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
+%patch6 -p1
+%patch7 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
@@ -174,13 +179,17 @@ Plik nagłówkowy API PyOpenColorIO.
 
 install -d build
 cd build
+# yaml-cpp 0.6.x requires C++11
+CXXFLAGS="%{rpmcxxflags} -std=c++11"
 %cmake .. \
+	%{!?with_oiio:-DDISABLE_OIIO=ON} \
 	-DOCIO_BUILD_DOCS=ON \
 %if %{with java}
 	-DOCIO_BUILD_JNIGLUE=ON \
 	-DOCIO_STATIC_JNIGLUE=OFF \
 %endif
 	%{!?with_sse2:-DOCIO_USE_SSE=OFF} \
+	-DUSE_EXTERNAL_LCMS=ON \
 	-DUSE_EXTERNAL_TINYXML=ON \
 	-DUSE_EXTERNAL_YAML=ON
 
@@ -211,7 +220,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc ChangeLog LICENSE README
+%doc ChangeLog LICENSE README.md
 %attr(755,root,root) %{_bindir}/ociobakelut
 %attr(755,root,root) %{_bindir}/ociocheck
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so.*.*.*
@@ -236,6 +245,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so
 %{_includedir}/OpenColorIO
 %{_pkgconfigdir}/OpenColorIO.pc
+%{_libdir}/cmake/OpenColorIO
 
 %files static
 %defattr(644,root,root,755)
