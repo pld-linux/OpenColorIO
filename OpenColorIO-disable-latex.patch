@@ -1,0 +1,12 @@
+--- OpenColorIO-1.1.1/docs/CMakeLists.txt.orig	2019-04-03 18:36:15.424733746 +0200
++++ OpenColorIO-1.1.1/docs/CMakeLists.txt	2019-04-03 20:59:12.768266291 +0200
+@@ -76,8 +76,7 @@
+         PATTERN .* EXCLUDE
+ )
+ 
+-find_package(LATEX)
+-if(PDFLATEX_COMPILER)
++if(FALSE)
+     
+     add_custom_target(latex
+         COMMAND sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex

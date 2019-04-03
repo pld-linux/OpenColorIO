@@ -15,12 +15,13 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	1.1.0
+Version:	1.1.1
 Release:	1
 License:	BSD
 Group:		Libraries
+#Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	802d8f5b1d1fe316ec5f76511aa611b8
+# Source0-md5:	23d8b9ac81599305539a5a8674b94a3d
 Patch0:		%{name}-system-libs.patch
 Patch1:		%{name}-java.patch
 Patch2:		%{name}-libsuffix.patch
@@ -29,6 +30,7 @@ Patch4:		%{name}-yaml-cpp.patch
 Patch5:		%{name}-no-Werror.patch
 Patch6:		%{name}-oiio.patch
 Patch7:		%{name}-cmake-dir.patch
+Patch8:		%{name}-disable-latex.patch
 URL:		http://opencolorio.org/
 BuildRequires:	cmake >= 2.8
 %{?with_java:BuildRequires:	jdk}
@@ -37,8 +39,6 @@ BuildRequires:	pkgconfig
 BuildRequires:	python-devel
 %if %{with docs}
 BuildRequires:	sphinx-pdg >= 1.1
-BuildRequires:	texlive-latex-ams
-BuildRequires:	texlive-xetex
 %endif
 BuildRequires:	tinyxml-devel >= 2.6.1
 BuildRequires:	yaml-cpp-devel >= 0.3.0
@@ -172,6 +172,7 @@ Plik nagłówkowy API PyOpenColorIO.
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
