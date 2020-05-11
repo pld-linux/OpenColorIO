@@ -6,7 +6,7 @@
 %bcond_without	oiio	# OpenImageIO-dependent apps (ocioconvert,ociodisplay)
 %bcond_without	opengl	# OpenGL-dependent app (ociodisplay)
 %bcond_without	java	# JNI glue
-%bcond_without	docs	# documentation
+%bcond_without	doc	# documentation
 %bcond_with	sse2	# use SSE2 instructions
 #
 %ifarch %{x8664} pentrium4
@@ -37,7 +37,7 @@ BuildRequires:	cmake >= 2.8
 BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	pkgconfig
 BuildRequires:	python-devel
-%if %{with docs}
+%if %{with doc}
 BuildRequires:	sphinx-pdg >= 1.1
 %endif
 BuildRequires:	tinyxml-devel >= 2.6.1
