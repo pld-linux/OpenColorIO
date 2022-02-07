@@ -5,8 +5,8 @@
 # Conditional build:
 %bcond_without	oiio	# OpenImageIO-dependent apps (ocioconvert,ociodisplay)
 %bcond_without	opengl	# OpenGL-dependent app (ociodisplay)
-%bcond_without	java	# JNI glue
-%bcond_without	doc	# documentation
+%bcond_with	java	# JNI glue
+%bcond_with	doc	# documentation
 %bcond_with	sse2	# use SSE2 instructions
 #
 %ifarch %{x8664} pentrium4
@@ -15,29 +15,29 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	1.1.1
-Release:	3
+Version:	2.1.1
+Release:	0.1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	23d8b9ac81599305539a5a8674b94a3d
-Patch0:		%{name}-system-libs.patch
-Patch1:		%{name}-java.patch
-Patch2:		%{name}-libsuffix.patch
-Patch3:		%{name}-missing.patch
+# Source0-md5:	604f562e073f23d88ce89ed4f7f709ba
 Patch4:		%{name}-yaml-cpp.patch
 Patch5:		%{name}-no-Werror.patch
 Patch6:		%{name}-oiio.patch
 Patch7:		%{name}-cmake-dir.patch
 Patch8:		%{name}-disable-latex.patch
 URL:		http://opencolorio.org/
+BuildRequires:	Imath-devel >= 3.1.2
 BuildRequires:	cmake >= 2.8
 %{?with_java:BuildRequires:	jdk}
 BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	pkgconfig
-BuildRequires:	python-devel
+BuildRequires:	python3-devel
+BuildRequires:	python3-pybind11 >= 2.6.1
 %if %{with doc}
+BuildRequires:	python3-recommonmark
+BuildRequires:	python3-testresources
 BuildRequires:	sphinx-pdg >= 1.1
 %endif
 BuildRequires:	tinyxml-devel >= 2.6.1
@@ -51,6 +51,7 @@ BuildRequires:	glew-devel >= 1.5.1
 BuildRequires:	OpenImageIO-devel
 BuildRequires:	lcms2-devel >= 2.1
 %endif
+BuildRequires:	rpmbuild(macros) >= 1.742
 Requires:	tinyxml >= 2.6.1
 Requires:	yaml-cpp >= 0.3.0
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -113,18 +114,6 @@ Header files for OpenColorIO library.
 %description devel -l pl.UTF-8
 Pliki nagłówkowe biblioteki OpenColorIO.
 
-%package static
-Summary:	Static OpenColorIO library
-Summary(pl.UTF-8):	Statyczna biblioteka OpenColorIO
-Group:		Development/Libraries
-Requires:	%{name}-devel = %{version}-%{release}
-
-%description static
-Static OpenColorIO library.
-
-%description static -l pl.UTF-8
-Statyczna biblioteka OpenColorIO.
-
 %package -n java-OpenColorIO
 Summary:	Java binding for OpenColorIO library
 Summary(pl.UTF-8):	Wiązanie Javy do biblioteki OpenColorIO
@@ -137,42 +126,25 @@ Java binding for OpenColorIO library.
 %description -n java-OpenColorIO -l pl.UTF-8
 Wiązanie Javy do biblioteki OpenColorIO.
 
-%package -n python-OpenColorIO
+%package -n python3-OpenColorIO
 Summary:	Python binding for OpenColorIO library
 Summary(pl.UTF-8):	Wiązanie Pythona do biblioteki OpenColorIO
 Group:		Libraries/Python
 Requires:	%{name} = %{version}-%{release}
 
-%description -n python-OpenColorIO
+%description -n python3-OpenColorIO
 Python binding for OpenColorIO library.
 
-%description -n python-OpenColorIO -l pl.UTF-8
+%description -n python3-OpenColorIO -l pl.UTF-8
 Wiązanie Pythona do biblioteki OpenColorIO.
-
-%package -n python-OpenColorIO-devel
-Summary:	Header file for PyOpenColorIO API
-Summary(pl.UTF-8):	Plik nagłówkowy API PyOpenColorIO
-Group:		Development/Libraries
-Requires:	%{name}-devel = %{version}-%{release}
-Requires:	python-OpenColorIO = %{version}-%{release}
-
-%description -n python-OpenColorIO-devel
-Header file for PyOpenColorIO API.
-
-%description -n python-OpenColorIO-devel -l pl.UTF-8
-Plik nagłówkowy API PyOpenColorIO.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
-%patch6 -p1
-%patch7 -p1
-%patch8 -p1
+#%patch4 -p1
+#%patch5 -p1
+#%patch6 -p1
+#%patch7 -p1
+#%patch8 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
@@ -183,12 +155,10 @@ cd build
 # yaml-cpp 0.6.x requires C++11
 CXXFLAGS="%{rpmcxxflags} -std=c++11"
 %cmake .. \
+	-DCMAKE_CONFIGURATION_TYPES=PLD \
+	%cmake_on_off doc OCIO_BUILD_DOCS \
+	%cmake_on_off java OCIO_BUILD_JAVA \
 	%{!?with_oiio:-DDISABLE_OIIO=ON} \
-	-DOCIO_BUILD_DOCS=ON \
-%if %{with java}
-	-DOCIO_BUILD_JNIGLUE=ON \
-	-DOCIO_STATIC_JNIGLUE=OFF \
-%endif
 	%{!?with_sse2:-DOCIO_USE_SSE=OFF} \
 	-DUSE_EXTERNAL_LCMS=ON \
 	-DUSE_EXTERNAL_TINYXML=ON \
@@ -204,8 +174,6 @@ rm -rf $RPM_BUILD_ROOT
 
 # not needed when installing to /usr
 %{__rm} $RPM_BUILD_ROOT%{_datadir}/ocio/setup_ocio.sh
-# packaged as %doc
-%{__rm} -r $RPM_BUILD_ROOT%{_docdir}/OpenColorIO
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -216,16 +184,19 @@ rm -rf $RPM_BUILD_ROOT
 %post	-n java-OpenColorIO -p /sbin/ldconfig
 %postun	-n java-OpenColorIO -p /sbin/ldconfig
 
-%post	-n python-OpenColorIO -p /sbin/ldconfig
-%postun	-n python-OpenColorIO -p /sbin/ldconfig
+%post	-n python3-OpenColorIO -p /sbin/ldconfig
+%postun	-n python3-OpenColorIO -p /sbin/ldconfig
 
 %files
 %defattr(644,root,root,755)
-%doc ChangeLog LICENSE README.md
+%doc CHANGELOG.md LICENSE README.md
 %attr(755,root,root) %{_bindir}/ociobakelut
 %attr(755,root,root) %{_bindir}/ociocheck
+%attr(755,root,root) %{_bindir}/ociochecklut
+%attr(755,root,root) %{_bindir}/ociomakeclf
+%attr(755,root,root) %{_bindir}/ociowrite
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libOpenColorIO.so.1
+%attr(755,root,root) %ghost %{_libdir}/libOpenColorIO.so.2.1
 
 %if %{with oiio}
 %files convert
@@ -242,15 +213,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
-%doc build/docs/build-html/*
+%{?with_doc:%doc build/docs/build-html/*}
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so
+%{_libdir}/libOpenColorIOoglapphelpers.a
 %{_includedir}/OpenColorIO
 %{_pkgconfigdir}/OpenColorIO.pc
 %{_libdir}/cmake/OpenColorIO
-
-%files static
-%defattr(644,root,root,755)
-%{_libdir}/libOpenColorIO.a
 
 %if %{with java}
 %files -n java-OpenColorIO
@@ -262,10 +230,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/ocio/OpenColorIO-%{version}.jar
 %endif
 
-%files -n python-OpenColorIO
+%files -n python3-OpenColorIO
 %defattr(644,root,root,755)
-%attr(755,root,root) %{py_sitedir}/PyOpenColorIO.so
-
-%files -n python-OpenColorIO-devel
-%defattr(644,root,root,755)
-%{_includedir}/PyOpenColorIO
+%attr(755,root,root) %{py3_sitedir}/PyOpenColorIO.so
