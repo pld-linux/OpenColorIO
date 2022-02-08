@@ -33,6 +33,7 @@ BuildRequires:	cmake >= 2.8
 %{?with_java:BuildRequires:	jdk}
 BuildRequires:	libstdc++-devel >= 6:4.7
 BuildRequires:	pkgconfig
+BuildRequires:	pystring-devel
 BuildRequires:	python3-devel
 BuildRequires:	python3-pybind11 >= 2.6.1
 %if %{with doc}
