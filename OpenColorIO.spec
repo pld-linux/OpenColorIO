@@ -22,11 +22,6 @@ Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
 # Source0-md5:	604f562e073f23d88ce89ed4f7f709ba
-Patch4:		%{name}-yaml-cpp.patch
-Patch5:		%{name}-no-Werror.patch
-Patch6:		%{name}-oiio.patch
-Patch7:		%{name}-cmake-dir.patch
-Patch8:		%{name}-disable-latex.patch
 URL:		http://opencolorio.org/
 BuildRequires:	Imath-devel >= 3.1.2
 BuildRequires:	cmake >= 2.8
@@ -141,11 +136,6 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 
 %prep
 %setup -q
-#%patch4 -p1
-#%patch5 -p1
-#%patch6 -p1
-#%patch7 -p1
-#%patch8 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
@@ -153,10 +143,9 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 
 install -d build
 cd build
-# yaml-cpp 0.6.x requires C++11
-CXXFLAGS="%{rpmcxxflags} -std=c++11"
 %cmake .. \
 	-DCMAKE_CONFIGURATION_TYPES=PLD \
+	-DCMAKE_CXX_STANDARD=14 \
 	%cmake_on_off doc OCIO_BUILD_DOCS \
 	%cmake_on_off java OCIO_BUILD_JAVA \
 	%{!?with_oiio:-DDISABLE_OIIO=ON} \
@@ -204,6 +193,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/ocioconvert
 %attr(755,root,root) %{_bindir}/ociolutimage
+%attr(755,root,root) %{_bindir}/ocioperf
 %endif
 
 %if %{with oiio} && %{with opengl}
