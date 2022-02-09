@@ -16,7 +16,7 @@ Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
 Version:	2.1.1
-Release:	0.1
+Release:	1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
@@ -207,6 +207,7 @@ rm -rf $RPM_BUILD_ROOT
 %{?with_doc:%doc build/docs/build-html/*}
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so
 %{_libdir}/libOpenColorIOoglapphelpers.a
+%{?with_oiio:%{_libdir}/libOpenColorIOoiiohelpers.a}
 %{_includedir}/OpenColorIO
 %{_pkgconfigdir}/OpenColorIO.pc
 %{_libdir}/cmake/OpenColorIO
