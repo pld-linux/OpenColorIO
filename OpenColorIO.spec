@@ -1,55 +1,73 @@
-# TODO (proprietary?):
-# - truelight http://www.filmlight.ltd.uk/products/truelight/overview_tl.php
-# - nuke: http://docs.thefoundry.co.uk/products/nuke/
+# TODO:
+# - OpenFX plugin
+# - truelight http://www.filmlight.ltd.uk/products/truelight/overview_tl.php (proprietary?)
+# - nuke: http://docs.thefoundry.co.uk/products/nuke/ (proprietary)
 #
 # Conditional build:
-%bcond_without	oiio	# OpenImageIO-dependent apps (ocioconvert,ociodisplay)
+%bcond_without	oiio	# use OpenImageIO in apps (ocioconvert,ociodisplay,ociolutimage) instead of OpenEXR
 %bcond_without	opengl	# OpenGL-dependent app (ociodisplay)
-%bcond_with	java	# JNI glue
-%bcond_with	doc	# documentation
+%bcond_with	java	# JNI glue (outdated as of 2.2.1)
+%bcond_without	doc	# documentation
 %bcond_with	sse2	# use SSE2 instructions
 #
-%ifarch %{x8664} pentrium4
+%ifarch %{x8664} pentium4 x32
 %define	with_sse2	1
 %endif
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	2.1.1
-Release:	4
+Version:	2.2.1
+Release:	0.1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	604f562e073f23d88ce89ed4f7f709ba
+# Source0-md5:	372d6982cf01818a21a12f9628701a91
+Patch0:		%{name}-java.patch
 URL:		http://opencolorio.org/
 BuildRequires:	Imath-devel >= 3.1.2
-BuildRequires:	cmake >= 2.8
+BuildRequires:	OpenEXR-devel >= 3.0
+BuildRequires:	cmake >= 3.12
+BuildRequires:	expat-devel >= 2.4.1
 %{?with_java:BuildRequires:	jdk}
-BuildRequires:	libstdc++-devel >= 6:4.7
+BuildRequires:	libstdc++-devel >= 6:5
+BuildRequires:	minizip-ng-devel >= 3.0.7
 BuildRequires:	pkgconfig
-BuildRequires:	pystring-devel
+BuildRequires:	pystring-devel >= 1.1.3
 BuildRequires:	python3-devel
-BuildRequires:	python3-pybind11 >= 2.6.1
+BuildRequires:	python3-pybind11 >= 2.9.2
+BuildRequires:	rpm-build >= 4.6
+BuildRequires:	rpmbuild(macros) >= 1.742
+BuildRequires:	tinyxml-devel >= 2.6.1
+BuildRequires:	yaml-cpp-devel >= 0.7.0
+BuildRequires:	zlib-devel >= 1.2.13
 %if %{with doc}
+BuildRequires:	python3-breathe
 BuildRequires:	python3-recommonmark
+BuildRequires:	python3-six
+BuildRequires:	python3-sphinx_press_theme
+BuildRequires:	python3-sphinx_tabs
 BuildRequires:	python3-testresources
 BuildRequires:	sphinx-pdg >= 1.1
 %endif
-BuildRequires:	tinyxml-devel >= 2.6.1
-BuildRequires:	yaml-cpp-devel >= 0.3.0
 %if %{with opengl}
+BuildRequires:	OpenGL-GLX-devel
 BuildRequires:	OpenGL-devel
 BuildRequires:	OpenGL-glut-devel
 BuildRequires:	glew-devel >= 1.5.1
 %endif
 %if %{with oiio}
-BuildRequires:	OpenImageIO-devel
-BuildRequires:	lcms2-devel >= 2.1
+BuildRequires:	OpenImageIO-devel >= 2.2.14
+BuildRequires:	lcms2-devel >= 2.2
 %endif
-BuildRequires:	rpmbuild(macros) >= 1.742
+Requires:	expat >= 2.4.1
+Requires:	minizip-ng >= 3.0.7
 Requires:	tinyxml >= 2.6.1
-Requires:	yaml-cpp >= 0.3.0
+Requires:	yaml-cpp >= 0.7.0
+Requires:	zlib >= 1.2.13
+%if %{without java}
+Obsoletes:	java-OpenColorIO < 2
+%endif
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -77,7 +95,7 @@ Summary:	OpenColorIO convert tool
 Summary(pl.UTF-8):	Narzędzie OpenColorIO do konwersji
 Group:		Applications/Graphics
 Requires:	%{name} = %{version}-%{release}
-Requires:	lcms2 >= 2.1
+Requires:	lcms2 >= 2.2
 
 %description convert
 OpenColorIO convert tool.
@@ -102,13 +120,25 @@ Summary:	Header files for OpenColorIO library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki OpenColorIO
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	libstdc++-devel
+Requires:	libstdc++-devel >= 6:5
 
 %description devel
 Header files for OpenColorIO library.
 
 %description devel -l pl.UTF-8
 Pliki nagłówkowe biblioteki OpenColorIO.
+
+%package apidocs
+Summary:	API documentation for OpenColorIO library
+Summary(pl.UTF-8):	Dokumentacja API biblioteki OpenColorIO
+Group:		Documentation
+BuildArch:	noarch
+
+%description apidocs
+API documentation for OpenColorIO library.
+
+%description apidocs -l pl.UTF-8
+Dokumentacja API biblioteki OpenColorIO.
 
 %package -n java-OpenColorIO
 Summary:	Java binding for OpenColorIO library
@@ -136,6 +166,7 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
@@ -146,13 +177,10 @@ cd build
 %cmake .. \
 	-DCMAKE_CONFIGURATION_TYPES=PLD \
 	-DCMAKE_CXX_STANDARD=14 \
-	%cmake_on_off doc OCIO_BUILD_DOCS \
-	%cmake_on_off java OCIO_BUILD_JAVA \
-	%{!?with_oiio:-DDISABLE_OIIO=ON} \
-	%{!?with_sse2:-DOCIO_USE_SSE=OFF} \
-	-DUSE_EXTERNAL_LCMS=ON \
-	-DUSE_EXTERNAL_TINYXML=ON \
-	-DUSE_EXTERNAL_YAML=ON
+	%{cmake_on_off doc OCIO_BUILD_DOCS} \
+	%{cmake_on_off java OCIO_BUILD_JAVA} \
+	%{?with_oiio:-DOCIO_USE_OIIO_FOR_APPS=ON} \
+	%{!?with_sse2:-DOCIO_USE_SSE=OFF}
 
 %{__make}
 
@@ -164,6 +192,8 @@ rm -rf $RPM_BUILD_ROOT
 
 # not needed when installing to /usr
 %{__rm} $RPM_BUILD_ROOT%{_datadir}/ocio/setup_ocio.sh
+# packaged as %doc
+%{__rm} -r $RPM_BUILD_ROOT%{_docdir}/OpenColorIO
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -180,23 +210,22 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc CHANGELOG.md LICENSE README.md
+%attr(755,root,root) %{_bindir}/ocioarchive
 %attr(755,root,root) %{_bindir}/ociobakelut
 %attr(755,root,root) %{_bindir}/ociocheck
 %attr(755,root,root) %{_bindir}/ociochecklut
 %attr(755,root,root) %{_bindir}/ociomakeclf
+%attr(755,root,root) %{_bindir}/ocioperf
 %attr(755,root,root) %{_bindir}/ociowrite
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libOpenColorIO.so.2.1
+%attr(755,root,root) %ghost %{_libdir}/libOpenColorIO.so.2.2
 
-%if %{with oiio}
 %files convert
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/ocioconvert
 %attr(755,root,root) %{_bindir}/ociolutimage
-%attr(755,root,root) %{_bindir}/ocioperf
-%endif
 
-%if %{with oiio} && %{with opengl}
+%if %{with opengl}
 %files display
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/ociodisplay
@@ -204,13 +233,17 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
-%{?with_doc:%doc build/docs/build-html/*}
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so
+%{_libdir}/libOpenColorIOimageioapphelpers.a
 %{_libdir}/libOpenColorIOoglapphelpers.a
 %{?with_oiio:%{_libdir}/libOpenColorIOoiiohelpers.a}
 %{_includedir}/OpenColorIO
 %{_pkgconfigdir}/OpenColorIO.pc
 %{_libdir}/cmake/OpenColorIO
+
+%files apidocs
+%defattr(644,root,root,755)
+%doc build/docs/build-html/{_images,_static,api,aswf,concepts,configurations,guides,quick_start,releases,tutorials,*.html,*.js}
 
 %if %{with java}
 %files -n java-OpenColorIO

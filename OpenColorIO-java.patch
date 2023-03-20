@@ -1,0 +1,338 @@
+--- OpenColorIO-2.2.1/src/bindings/java/CMakeLists.txt.orig	2023-01-06 03:05:59.000000000 +0100
++++ OpenColorIO-2.2.1/src/bindings/java/CMakeLists.txt	2023-03-18 13:52:31.360067889 +0100
+@@ -122,7 +122,7 @@ add_custom_command(OUTPUT ${JNIOCIO_HEAD
+ 	COMMENT "Compiling .java files and creating jni C headers"
+ )
+ add_custom_command(OUTPUT ${JNIOCIO_JAR}
+-	COMMAND ${Java_JAVAH_EXECUTABLE} -jni -force ${JNIOCIO_CLASSES}
++	COMMAND ${Java_JAVAH_EXECUTABLE} -jni -force -cp ${CMAKE_CURRENT_BINARY_DIR} ${JNIOCIO_CLASSES}
+ 	COMMAND ${Java_JAR_EXECUTABLE} vcfm ${JNIOCIO_JAR} Manifest.txt org
+ 	DEPENDS ${JNIOCIO_HEADERS} JNI-directory
+ 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+--- OpenColorIO-2.2.1/src/bindings/java/Manifest.txt.in.orig	2023-01-06 03:05:59.000000000 +0100
++++ OpenColorIO-2.2.1/src/bindings/java/Manifest.txt.in	2023-03-18 14:11:32.890550354 +0100
+@@ -1,6 +1,3 @@
+-# SPDX-License-Identifier: BSD-3-Clause
+-# Copyright Contributors to the OpenColorIO Project.
+-
+ Name: org/OpenColorIO/
+ Specification-Title: OpenColorIO - Open Source Color Management
+ Specification-Version: @OpenColorIO_VERSION@
+--- OpenColorIO-2.2.1/src/bindings/java/JNIUtil.h.orig	2023-01-06 03:05:59.000000000 +0100
++++ OpenColorIO-2.2.1/src/bindings/java/JNIUtil.h	2023-03-18 21:41:48.937525222 +0100
+@@ -41,7 +41,7 @@ typedef JObject <ConstTransformRcPtr, Tr
+ typedef JObject <ConstAllocationTransformRcPtr, AllocationTransformRcPtr> AllocationTransformJNI;
+ typedef JObject <ConstCDLTransformRcPtr, CDLTransformRcPtr> CDLTransformJNI;
+ typedef JObject <ConstColorSpaceTransformRcPtr, ColorSpaceTransformRcPtr> ColorSpaceTransformJNI;
+-typedef JObject <ConstDisplayTransformRcPtr, DisplayTransformRcPtr> DisplayTransformJNI;
++typedef JObject <ConstDisplayViewTransformRcPtr, DisplayViewTransformRcPtr> DisplayViewTransformJNI;
+ typedef JObject <ConstExponentTransformRcPtr, ExponentTransformRcPtr> ExponentTransformJNI;
+ typedef JObject <ConstFileTransformRcPtr, FileTransformRcPtr> FileTransformJNI;
+ typedef JObject <ConstGroupTransformRcPtr, GroupTransformRcPtr> GroupTransformJNI;
+@@ -197,6 +197,52 @@ private:
+     jfloatArray m_val;
+ };
+ 
++class GetJDoubleArrayValue
++{
++public:
++    GetJDoubleArrayValue(JNIEnv* env, jdoubleArray val, const char* name, int32_t len) {
++        CheckArrayLength(env, name, val, len);
++        m_env = env;
++        m_val = val;
++        if(val != NULL) m_ptr = env->GetDoubleArrayElements(val, JNI_FALSE);
++    }
++    ~GetJDoubleArrayValue() {
++        if(m_val != NULL) m_env->ReleaseDoubleArrayElements(m_val, m_ptr, JNI_FALSE);
++        m_val = NULL;
++        m_ptr = NULL;
++    }
++    jdouble* operator() () {
++        return m_ptr;
++    }
++private:
++    JNIEnv* m_env;
++    jdouble* m_ptr;
++    jdoubleArray m_val;
++};
++
++class SetJDoubleArrayValue
++{
++public:
++    SetJDoubleArrayValue(JNIEnv* env, jdoubleArray val, const char* name, int32_t len) {
++        CheckArrayLength(env, name, val, len);
++        m_env = env;
++        m_val = val;
++        if(val != NULL) m_tmp.resize(len);
++    }
++    ~SetJDoubleArrayValue() {
++        if(m_val != NULL) m_env->SetDoubleArrayRegion(m_val, 0, m_tmp.size(), &m_tmp[0]);
++        m_val = NULL;
++        m_tmp.clear();
++    }
++    double* operator() () {
++        return &m_tmp[0];
++    }
++private:
++    JNIEnv* m_env;
++    std::vector<double> m_tmp;
++    jdoubleArray m_val;
++};
++
+ class GetJIntArrayValue
+ {
+ public:
+--- OpenColorIO-2.2.1/src/bindings/java/JNIBaker.cpp.orig	2023-01-06 03:05:59.000000000 +0100
++++ OpenColorIO-2.2.1/src/bindings/java/JNIBaker.cpp	2023-03-18 20:05:24.725527655 +0100
+@@ -75,42 +75,6 @@ Java_org_OpenColorIO_Baker_getFormat(JNI
+ }
+ 
+ JNIEXPORT void JNICALL
+-Java_org_OpenColorIO_Baker_setType(JNIEnv * env, jobject self, jstring type)
+-{
+-    OCIO_JNITRY_ENTER()
+-    BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
+-    bake->setType(GetJStringValue(env, type)());
+-    OCIO_JNITRY_EXIT()
+-}
+-
+-JNIEXPORT jstring JNICALL
+-Java_org_OpenColorIO_Baker_getType(JNIEnv * env, jobject self)
+-{
+-    OCIO_JNITRY_ENTER()
+-    ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
+-    return env->NewStringUTF(bake->getType());
+-    OCIO_JNITRY_EXIT(NULL)
+-}
+-
+-JNIEXPORT void JNICALL
+-Java_org_OpenColorIO_Baker_setMetadata(JNIEnv * env, jobject self, jstring metadata)
+-{
+-    OCIO_JNITRY_ENTER()
+-    BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
+-    bake->setMetadata(GetJStringValue(env, metadata)());
+-    OCIO_JNITRY_EXIT()
+-}
+-
+-JNIEXPORT jstring JNICALL
+-Java_org_OpenColorIO_Baker_getMetadata(JNIEnv * env, jobject self)
+-{
+-    OCIO_JNITRY_ENTER()
+-    ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
+-    return env->NewStringUTF(bake->getMetadata());
+-    OCIO_JNITRY_EXIT(NULL)
+-}
+-
+-JNIEXPORT void JNICALL
+ Java_org_OpenColorIO_Baker_setInputSpace(JNIEnv * env, jobject self, jstring inputSpace)
+ {
+     OCIO_JNITRY_ENTER()
+--- OpenColorIO-2.2.1/src/bindings/java/JNIConfig.cpp.orig	2023-03-19 08:32:19.096080705 +0100
++++ OpenColorIO-2.2.1/src/bindings/java/JNIConfig.cpp	2023-03-19 08:32:21.976065103 +0100
+@@ -390,21 +390,21 @@ Java_org_OpenColorIO_Config_getView(JNIE
+ }
+ 
+ JNIEXPORT jstring JNICALL
+-Java_org_OpenColorIO_Config_getDisplayColorSpaceName(JNIEnv * env, jobject self, jstring display, jstring view)
++Java_org_OpenColorIO_Config_getDisplayViewColorSpaceName(JNIEnv * env, jobject self, jstring display, jstring view)
+ {
+     OCIO_JNITRY_ENTER()
+     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+-    return env->NewStringUTF(cfg->getDisplayColorSpaceName(GetJStringValue(env, display)(),
++    return env->NewStringUTF(cfg->getDisplayViewColorSpaceName(GetJStringValue(env, display)(),
+                                                            GetJStringValue(env, view)()));
+     OCIO_JNITRY_EXIT(NULL)
+ }
+ 
+ JNIEXPORT jstring JNICALL
+-Java_org_OpenColorIO_Config_getDisplayLooks(JNIEnv * env, jobject self, jstring display, jstring view)
++Java_org_OpenColorIO_Config_getDisplayViewLooks(JNIEnv * env, jobject self, jstring display, jstring view)
+ {
+     OCIO_JNITRY_ENTER()
+     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+-    return env->NewStringUTF(cfg->getDisplayLooks(GetJStringValue(env, display)(),
++    return env->NewStringUTF(cfg->getDisplayViewLooks(GetJStringValue(env, display)(),
+                                                   GetJStringValue(env, view)()));
+     OCIO_JNITRY_EXIT(NULL)
+ }
+@@ -471,20 +471,20 @@ Java_org_OpenColorIO_Config_getActiveVie
+ }
+ 
+ JNIEXPORT void JNICALL
+-Java_org_OpenColorIO_Config_getDefaultLumaCoefs(JNIEnv * env, jobject self, jfloatArray rgb)
++Java_org_OpenColorIO_Config_getDefaultLumaCoefs(JNIEnv * env, jobject self, jdoubleArray rgb)
+ {
+     OCIO_JNITRY_ENTER()
+     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+-    cfg->getDefaultLumaCoefs(SetJFloatArrayValue(env, rgb, "rgb", 3)());
++    cfg->getDefaultLumaCoefs(SetJDoubleArrayValue(env, rgb, "rgb", 3)());
+     OCIO_JNITRY_EXIT()
+ }
+ 
+ JNIEXPORT void JNICALL
+-Java_org_OpenColorIO_Config_setDefaultLumaCoefs(JNIEnv * env, jobject self, jfloatArray rgb)
++Java_org_OpenColorIO_Config_setDefaultLumaCoefs(JNIEnv * env, jobject self, jdoubleArray rgb)
+ {
+     OCIO_JNITRY_ENTER()
+     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
+-    cfg->setDefaultLumaCoefs(GetJFloatArrayValue(env, rgb, "rgb", 3)());
++    cfg->setDefaultLumaCoefs(GetJDoubleArrayValue(env, rgb, "rgb", 3)());
+     OCIO_JNITRY_EXIT()
+ }
+ 
+--- OpenColorIO-2.2.1/src/bindings/java/JNIGlobals.cpp.orig	2023-01-06 03:05:59.000000000 +0100
++++ OpenColorIO-2.2.1/src/bindings/java/JNIGlobals.cpp	2023-03-19 20:10:46.705714386 +0100
+@@ -209,14 +209,6 @@ Java_org_OpenColorIO_Globals_CombineTran
+ 
+ // ColorSpaceDirection
+ 
+-JNIEXPORT jstring JNICALL
+-Java_org_OpenColorIO_ColorSpaceDirection_toString(JNIEnv * env, jobject self) {
+-    OCIO_JNITRY_ENTER()
+-    return env->NewStringUTF(
+-      ColorSpaceDirectionToString(GetJEnum<ColorSpaceDirection>(env, self)));
+-    OCIO_JNITRY_EXIT(NULL)
+-}
+-
+ JNIEXPORT jboolean JNICALL
+ Java_org_OpenColorIO_ColorSpaceDirection_equals(JNIEnv * env, jobject self, jobject obj) {
+     OCIO_JNITRY_ENTER()
+@@ -225,22 +217,6 @@ Java_org_OpenColorIO_ColorSpaceDirection
+     OCIO_JNITRY_EXIT(false)
+ }
+ 
+-JNIEXPORT jstring JNICALL
+-Java_org_OpenColorIO_Globals_ColorSpaceDirectionToString(JNIEnv * env, jobject, jobject dir) {
+-    OCIO_JNITRY_ENTER()
+-    return env->NewStringUTF(
+-      ColorSpaceDirectionToString(GetJEnum<ColorSpaceDirection>(env, dir)));
+-    OCIO_JNITRY_EXIT(NULL)
+-}
+-
+-JNIEXPORT jobject JNICALL
+-Java_org_OpenColorIO_Globals_ColorSpaceDirectionFromString(JNIEnv * env, jobject, jstring s) {
+-    OCIO_JNITRY_ENTER()
+-    return BuildJEnum(env, "org/OpenColorIO/ColorSpaceDirection",
+-             ColorSpaceDirectionFromString(GetJStringValue(env, s)()));
+-    OCIO_JNITRY_EXIT(NULL)
+-}
+-
+ // BitDepth
+ 
+ JNIEXPORT jstring JNICALL
+--- OpenColorIO-2.2.1/src/bindings/java/JNIGpuShaderDesc.cpp.orig	2023-01-06 03:05:59.000000000 +0100
++++ OpenColorIO-2.2.1/src/bindings/java/JNIGpuShaderDesc.cpp	2023-03-19 21:32:20.619201781 +0100
+@@ -9,16 +9,6 @@
+ #include "JNIUtil.h"
+ using namespace OCIO_NAMESPACE;
+ 
+-namespace
+-{
+-
+-void GpuShaderDesc_deleter(GpuShaderDesc* d)
+-{
+-    delete d;
+-}
+-
+-}; // end anon namespace
+-
+ JNIEXPORT void JNICALL
+ Java_org_OpenColorIO_GpuShaderDesc_create(JNIEnv * env, jobject self) {
+     OCIO_JNITRY_ENTER()
+@@ -26,7 +16,7 @@ Java_org_OpenColorIO_GpuShaderDesc_creat
+     jnistruct->back_ptr = env->NewGlobalRef(self);
+     jnistruct->constcppobj = new ConstGpuShaderDescRcPtr();
+     jnistruct->cppobj = new GpuShaderDescRcPtr();
+-    *jnistruct->cppobj = GpuShaderDescRcPtr(new GpuShaderDesc(), &GpuShaderDesc_deleter);
++    *jnistruct->cppobj = GpuShaderDesc::CreateShaderDesc();
+     jnistruct->isconst = false;
+     jclass wclass = env->GetObjectClass(self);
+     jfieldID fid = env->GetFieldID(wclass, "m_impl", "J");
+@@ -75,22 +65,6 @@ Java_org_OpenColorIO_GpuShaderDesc_getFu
+     OCIO_JNITRY_EXIT(NULL)
+ }
+ 
+-JNIEXPORT void JNICALL
+-Java_org_OpenColorIO_GpuShaderDesc_setLut3DEdgeLen(JNIEnv * env, jobject self, jint len) {
+-    OCIO_JNITRY_ENTER()
+-    GpuShaderDescRcPtr ptr = GetEditableJOCIO<GpuShaderDescRcPtr, GpuShaderDescJNI>(env, self);
+-    ptr->setLut3DEdgeLen((int)len);
+-    OCIO_JNITRY_EXIT()
+-}
+-
+-JNIEXPORT jint JNICALL
+-Java_org_OpenColorIO_GpuShaderDesc_getLut3DEdgeLen(JNIEnv * env, jobject self) {
+-    OCIO_JNITRY_ENTER()
+-    ConstGpuShaderDescRcPtr ptr = GetConstJOCIO<ConstGpuShaderDescRcPtr, GpuShaderDescJNI>(env, self);
+-    return (jint)ptr->getLut3DEdgeLen();
+-    OCIO_JNITRY_EXIT(0)
+-}
+-
+ JNIEXPORT jstring JNICALL
+ Java_org_OpenColorIO_GpuShaderDesc_getCacheID(JNIEnv * env, jobject self) {
+     OCIO_JNITRY_ENTER()
+--- OpenColorIO-2.2.1/src/bindings/java/JNIImageDesc.cpp.orig	2023-01-06 03:05:59.000000000 +0100
++++ OpenColorIO-2.2.1/src/bindings/java/JNIImageDesc.cpp	2023-03-19 21:52:08.522766355 +0100
+@@ -55,7 +55,7 @@ Java_org_OpenColorIO_PackedImageDesc_cre
+     jnistruct->constcppobj = new ConstImageDescRcPtr();
+     jnistruct->cppobj = new ImageDescRcPtr();
+     *jnistruct->cppobj = ImageDescRcPtr(new PackedImageDesc(_data, (long)width,
+-        (long)height, (long)numChannels, (long)chanStrideBytes, (long) xStrideBytes,
++        (long)height, (long)numChannels, BIT_DEPTH_F32, (long)chanStrideBytes, (long) xStrideBytes,
+         (long)yStrideBytes), &ImageDesc_deleter);
+     jnistruct->isconst = false;
+     jclass wclass = env->GetObjectClass(self);
+@@ -79,7 +79,7 @@ Java_org_OpenColorIO_PackedImageDesc_get
+     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
+     ConstPackedImageDescRcPtr ptr = DynamicPtrCast<const PackedImageDesc>(img);
+     int size = ptr->getWidth() * ptr->getHeight() * ptr->getNumChannels();
+-    return NewJFloatBuffer(env, ptr->getData(), size);
++    return NewJFloatBuffer(env, static_cast<float*>(ptr->getData()), size);
+     OCIO_JNITRY_EXIT(NULL)
+ }
+ 
+@@ -201,7 +201,7 @@ JNICALL Java_org_OpenColorIO_PlanarImage
+     jnistruct->constcppobj = new ConstImageDescRcPtr();
+     jnistruct->cppobj = new ImageDescRcPtr();
+     *jnistruct->cppobj = ImageDescRcPtr(new PlanarImageDesc(_rdata, _gdata, _bdata,
+-        _adata, (long)width, (long)height, (long)yStrideBytes), &ImageDesc_deleter);
++        _adata, (long)width, (long)height, BIT_DEPTH_F32, 0, (long)yStrideBytes), &ImageDesc_deleter);
+     jnistruct->isconst = false;
+     jclass wclass = env->GetObjectClass(self);
+     jfieldID fid = env->GetFieldID(wclass, "m_impl", "J");
+@@ -216,7 +216,7 @@ Java_org_OpenColorIO_PlanarImageDesc_get
+     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
+     ConstPlanarImageDescRcPtr ptr = DynamicPtrCast<const PlanarImageDesc>(img);
+     int size = ptr->getWidth() * ptr->getHeight();
+-    return NewJFloatBuffer(env, ptr->getRData(), size);
++    return NewJFloatBuffer(env, static_cast<float*>(ptr->getRData()), size);
+     OCIO_JNITRY_EXIT(NULL)
+ }
+ 
+@@ -227,7 +227,7 @@ Java_org_OpenColorIO_PlanarImageDesc_get
+     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
+     ConstPlanarImageDescRcPtr ptr = DynamicPtrCast<const PlanarImageDesc>(img);
+     int size = ptr->getWidth() * ptr->getHeight();
+-    return NewJFloatBuffer(env, ptr->getGData(), size);
++    return NewJFloatBuffer(env, static_cast<float*>(ptr->getGData()), size);
+     OCIO_JNITRY_EXIT(NULL)
+ }
+ 
+@@ -238,7 +238,7 @@ Java_org_OpenColorIO_PlanarImageDesc_get
+     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
+     ConstPlanarImageDescRcPtr ptr = DynamicPtrCast<const PlanarImageDesc>(img);
+     int size = ptr->getWidth() * ptr->getHeight();
+-    return NewJFloatBuffer(env, ptr->getBData(), size);
++    return NewJFloatBuffer(env, static_cast<float*>(ptr->getBData()), size);
+     OCIO_JNITRY_EXIT(NULL)
+ }
+ 
+@@ -249,7 +249,7 @@ Java_org_OpenColorIO_PlanarImageDesc_get
+     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
+     ConstPlanarImageDescRcPtr ptr = DynamicPtrCast<const PlanarImageDesc>(img);
+     int size = ptr->getWidth() * ptr->getHeight();
+-    return NewJFloatBuffer(env, ptr->getAData(), size);
++    return NewJFloatBuffer(env, static_cast<float*>(ptr->getAData()), size);
+     OCIO_JNITRY_EXIT(NULL)
+ }
+ 
