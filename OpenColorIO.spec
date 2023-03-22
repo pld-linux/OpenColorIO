@@ -4,7 +4,6 @@
 # - nuke: http://docs.thefoundry.co.uk/products/nuke/ (proprietary)
 #
 # Conditional build:
-%bcond_without	oiio	# use OpenImageIO in apps (ocioconvert,ociodisplay,ociolutimage) instead of OpenEXR
 %bcond_without	opengl	# OpenGL-dependent app (ociodisplay)
 %bcond_with	java	# JNI glue (outdated as of 2.2.1)
 %bcond_without	doc	# documentation
@@ -17,7 +16,7 @@ Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
 Version:	2.2.1
-Release:	0.2
+Release:	1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
@@ -55,10 +54,6 @@ BuildRequires:	OpenGL-GLX-devel
 BuildRequires:	OpenGL-devel
 BuildRequires:	OpenGL-glut-devel
 BuildRequires:	glew-devel >= 1.5.1
-%endif
-%if %{with oiio}
-BuildRequires:	OpenImageIO-devel >= 2.2.14
-BuildRequires:	lcms2-devel >= 2.2
 %endif
 Requires:	expat >= 2.4.1
 Requires:	minizip-ng >= 3.0.7
@@ -179,7 +174,6 @@ cd build
 	-DCMAKE_CXX_STANDARD=14 \
 	%{cmake_on_off doc OCIO_BUILD_DOCS} \
 	%{cmake_on_off java OCIO_BUILD_JAVA} \
-	%{?with_oiio:-DOCIO_USE_OIIO_FOR_APPS=ON} \
 	%{!?with_sse2:-DOCIO_USE_SSE=OFF}
 
 %{__make}
@@ -236,7 +230,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so
 %{_libdir}/libOpenColorIOimageioapphelpers.a
 %{_libdir}/libOpenColorIOoglapphelpers.a
-%{?with_oiio:%{_libdir}/libOpenColorIOoiiohelpers.a}
 %{_includedir}/OpenColorIO
 %{_pkgconfigdir}/OpenColorIO.pc
 %{_libdir}/cmake/OpenColorIO
