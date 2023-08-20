@@ -1,0 +1,20 @@
+--- OpenColorIO-2.2.1/share/cmake/modules/Findyaml-cpp.cmake.orig	2023-01-06 03:05:59.000000000 +0100
++++ OpenColorIO-2.2.1/share/cmake/modules/Findyaml-cpp.cmake	2023-08-20 20:59:15.288585933 +0200
+@@ -43,7 +43,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUA
+     endif()
+ 
+     if(yaml-cpp_FOUND)
+-        get_target_property(yaml-cpp_LIBRARY yaml-cpp LOCATION)
++        get_target_property(yaml-cpp_LIBRARY yaml-cpp::yaml-cpp LOCATION)
+     else()
+ 
+         # As yaml-cpp-config.cmake search fails, search an installed library
+@@ -130,7 +130,7 @@ endif()
+ ###############################################################################
+ ### Create target (if previous 'find_package' call hasn't) ###
+ 
+-if(NOT TARGET yaml-cpp)
++if(NOT TARGET yaml-cpp::yaml-cpp)
+     add_library(yaml-cpp UNKNOWN IMPORTED GLOBAL)
+     set(_yaml-cpp_TARGET_CREATE TRUE)
+ endif()

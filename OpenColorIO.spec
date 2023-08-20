@@ -16,13 +16,14 @@ Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
 Version:	2.2.1
-Release:	1
+Release:	2
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
 # Source0-md5:	372d6982cf01818a21a12f9628701a91
 Patch0:		%{name}-java.patch
+Patch1:		%{name}-yaml-cpp.patch
 URL:		http://opencolorio.org/
 BuildRequires:	Imath-devel >= 3.1.2
 BuildRequires:	OpenEXR-devel >= 3.0
@@ -38,7 +39,7 @@ BuildRequires:	python3-pybind11 >= 2.9.2
 BuildRequires:	rpm-build >= 4.6
 BuildRequires:	rpmbuild(macros) >= 1.742
 BuildRequires:	tinyxml-devel >= 2.6.1
-BuildRequires:	yaml-cpp-devel >= 0.7.0
+BuildRequires:	yaml-cpp-devel >= 0.8.0
 BuildRequires:	zlib-devel >= 1.2.13
 %if %{with doc}
 BuildRequires:	python3-breathe
@@ -58,7 +59,7 @@ BuildRequires:	glew-devel >= 1.5.1
 Requires:	expat >= 2.4.1
 Requires:	minizip-ng >= 3.0.7
 Requires:	tinyxml >= 2.6.1
-Requires:	yaml-cpp >= 0.7.0
+Requires:	yaml-cpp >= 0.8.0
 Requires:	zlib >= 1.2.13
 %if %{without java}
 Obsoletes:	java-OpenColorIO < 2
@@ -162,6 +163,7 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
