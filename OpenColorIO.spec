@@ -1,5 +1,5 @@
 # TODO:
-# - OpenFX plugin
+# - OpenFX plugin (OpenFX >= 1.4, https://github.com/ofxa/openfx)
 # - truelight http://www.filmlight.ltd.uk/products/truelight/overview_tl.php (proprietary?)
 # - nuke: http://docs.thefoundry.co.uk/products/nuke/ (proprietary)
 #
@@ -8,6 +8,14 @@
 %bcond_with	java	# JNI glue (outdated as of 2.2.1)
 %bcond_without	doc	# documentation
 %bcond_with	sse2	# use SSE2 instructions
+%bcond_with	sse3	# use SSE3 instructions
+%bcond_with	ssse3	# use SSSE3 instructions
+%bcond_with	sse4	# use SSE4 instructions
+%bcond_with	sse42	# use SSE4.2 instructions
+%bcond_with	avx	# use AVX instructions
+%bcond_with	avx2	# use AVX2 instructions
+%bcond_with	avx512	# use AVX512 instructions
+%bcond_with	f16c	# use F16C instructions
 #
 %ifarch %{x8664} pentium4 x32
 %define	with_sse2	1
@@ -15,21 +23,21 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	2.2.1
-Release:	3
+Version:	2.3.2
+Release:	1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	372d6982cf01818a21a12f9628701a91
+# Source0-md5:	8af74fcb8c4820ab21204463a06ba490
 Patch0:		%{name}-java.patch
-Patch1:		%{name}-yaml-cpp.patch
 URL:		http://opencolorio.org/
-BuildRequires:	Imath-devel >= 3.1.2
-BuildRequires:	OpenEXR-devel >= 3.0
-BuildRequires:	cmake >= 3.12
-BuildRequires:	expat-devel >= 2.4.1
+BuildRequires:	Imath-devel >= 3.1.6
+BuildRequires:	OpenEXR-devel >= 3.0.5
+BuildRequires:	cmake >= 3.13
+BuildRequires:	expat-devel >= 1:2.5.0
 %{?with_java:BuildRequires:	jdk}
+BuildRequires:	lcms2-devel >= 2.2
 BuildRequires:	libstdc++-devel >= 6:5
 BuildRequires:	minizip-ng-devel >= 3.0.7
 BuildRequires:	pkgconfig
@@ -56,7 +64,8 @@ BuildRequires:	OpenGL-devel
 BuildRequires:	OpenGL-glut-devel
 BuildRequires:	glew-devel >= 1.5.1
 %endif
-Requires:	expat >= 2.4.1
+Requires:	Imath >= 3.1.6
+Requires:	expat >= 1:2.5.0
 Requires:	minizip-ng >= 3.0.7
 Requires:	tinyxml >= 2.6.1
 Requires:	yaml-cpp >= 0.8.0
@@ -91,6 +100,7 @@ Summary:	OpenColorIO convert tool
 Summary(pl.UTF-8):	Narzędzie OpenColorIO do konwersji
 Group:		Applications/Graphics
 Requires:	%{name} = %{version}-%{release}
+Requires:	OpenEXR >= 3.0.5
 Requires:	lcms2 >= 2.2
 
 %description convert
@@ -163,28 +173,36 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 %prep
 %setup -q
 %patch0 -p1
-%patch1 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
 %{?with_java:export JAVA_HOME=%{_jvmlibdir}/java}
 
-install -d build
-cd build
-%cmake .. \
+%cmake -B build \
 	-DCMAKE_CONFIGURATION_TYPES=PLD \
 	-DCMAKE_CXX_STANDARD=14 \
 	%{cmake_on_off doc OCIO_BUILD_DOCS} \
 	%{cmake_on_off java OCIO_BUILD_JAVA} \
-	%{!?with_sse2:-DOCIO_USE_SSE=OFF}
+	%{!?with_sse2:-DOCIO_USE_SSE2=OFF} \
+	%{!?with_sse3:-DOCIO_USE_SSE3=OFF} \
+	%{!?with_ssse3:-DOCIO_USE_SSSE3=OFF} \
+	%{!?with_sse4:-DOCIO_USE_SSE4=OFF} \
+	%{!?with_sse42:-DOCIO_USE_SSE42=OFF} \
+	%{!?with_avx:-DOCIO_USE_AVX=OFF} \
+	%{!?with_avx2:-DOCIO_USE_AVX2=OFF} \
+	%{!?with_avx512:-DOCIO_USE_AVX512=OFF} \
+	%{!?with_f16c:-DOCIO_USE_F16C=OFF}
 
-%{__make}
+%{__make} -C build
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
 %{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
+
+%py3_comp $RPM_BUILD_ROOT%{py3_sitedir}
+%py3_ocomp $RPM_BUILD_ROOT%{py3_sitedir}
 
 # not needed when installing to /usr
 %{__rm} $RPM_BUILD_ROOT%{_datadir}/ocio/setup_ocio.sh
@@ -214,7 +232,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/ocioperf
 %attr(755,root,root) %{_bindir}/ociowrite
 %attr(755,root,root) %{_libdir}/libOpenColorIO.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libOpenColorIO.so.2.2
+%attr(755,root,root) %ghost %{_libdir}/libOpenColorIO.so.2.3
 
 %files convert
 %defattr(644,root,root,755)
@@ -252,4 +270,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n python3-OpenColorIO
 %defattr(644,root,root,755)
-%attr(755,root,root) %{py3_sitedir}/PyOpenColorIO.so
+%dir %{py3_sitedir}/PyOpenColorIO
+%attr(755,root,root) %{py3_sitedir}/PyOpenColorIO/PyOpenColorIO.so
+%{py3_sitedir}/PyOpenColorIO/__init__.py
+%{py3_sitedir}/PyOpenColorIO/__pycache__
