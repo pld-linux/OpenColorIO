@@ -24,7 +24,7 @@ Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
 Version:	2.3.2
-Release:	
+Release:	2
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
@@ -172,7 +172,7 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 
 %prep
 %setup -q
-%patch0 -p1
+%patch -P 0 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
