@@ -24,7 +24,7 @@ Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
 Version:	2.3.2
-Release:	2
+Release:	3
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
