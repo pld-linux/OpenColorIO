@@ -23,13 +23,13 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	2.3.2
-Release:	4
+Version:	2.5.0
+Release:	1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	8af74fcb8c4820ab21204463a06ba490
+# Source0-md5:	41d6b62ac672ed333ebfdcc1108407e0
 Patch0:		%{name}-java.patch
 URL:		http://opencolorio.org/
 BuildRequires:	Imath-devel >= 3.1.6
@@ -172,7 +172,7 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 
 %prep
 %setup -q
-%patch -P 0 -p1
+%patch -P0 -p1
 
 %build
 # required for cmake to find JNI headers/libs when lib64 is in use
@@ -228,11 +228,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/ociobakelut
 %attr(755,root,root) %{_bindir}/ociocheck
 %attr(755,root,root) %{_bindir}/ociochecklut
+%attr(755,root,root) %{_bindir}/ociocpuinfo
 %attr(755,root,root) %{_bindir}/ociomakeclf
+%attr(755,root,root) %{_bindir}/ociomergeconfigs
 %attr(755,root,root) %{_bindir}/ocioperf
 %attr(755,root,root) %{_bindir}/ociowrite
-%attr(755,root,root) %{_libdir}/libOpenColorIO.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libOpenColorIO.so.2.3
+%{_libdir}/libOpenColorIO.so.*.*.*
+%ghost %{_libdir}/libOpenColorIO.so.2.5
 
 %files convert
 %defattr(644,root,root,755)
@@ -247,7 +249,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libOpenColorIO.so
+%{_libdir}/libOpenColorIO.so
 %{_libdir}/libOpenColorIOimageioapphelpers.a
 %{_libdir}/libOpenColorIOoglapphelpers.a
 %{_includedir}/OpenColorIO
@@ -261,9 +263,9 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with java}
 %files -n java-OpenColorIO
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libOpenColorIO-JNI.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libOpenColorIO-JNI.so.1
-%attr(755,root,root) %{_libdir}/libOpenColorIO-JNI.so
+%{_libdir}/libOpenColorIO-JNI.so.*.*.*
+%ghost %{_libdir}/libOpenColorIO-JNI.so.1
+%{_libdir}/libOpenColorIO-JNI.so
 %dir %{_datadir}/ocio
 %{_datadir}/ocio/OpenColorIO-%{version}.jar
 %endif
