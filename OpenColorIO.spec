@@ -34,23 +34,24 @@ Patch0:		%{name}-java.patch
 URL:		http://opencolorio.org/
 BuildRequires:	Imath-devel >= 3.1.6
 BuildRequires:	OpenEXR-devel >= 3.0.5
-BuildRequires:	cmake >= 3.13
-BuildRequires:	expat-devel >= 1:2.5.0
+BuildRequires:	cmake >= 3.14
+BuildRequires:	expat-devel >= 1:2.6.0
 %{?with_java:BuildRequires:	jdk}
 BuildRequires:	lcms2-devel >= 2.2
 BuildRequires:	libstdc++-devel >= 6:5
-BuildRequires:	minizip-ng-devel >= 3.0.7
+BuildRequires:	minizip-ng-devel >= 4.0.0
 BuildRequires:	pkgconfig
 BuildRequires:	pystring-devel >= 1.1.3
 BuildRequires:	python3-devel
 BuildRequires:	python3-pybind11 >= 2.9.2
 BuildRequires:	rpm-build >= 4.6
-BuildRequires:	rpmbuild(macros) >= 1.742
+BuildRequires:	rpmbuild(macros) >= 2.047
 BuildRequires:	tinyxml-devel >= 2.6.1
 BuildRequires:	yaml-cpp-devel >= 0.8.0
 BuildRequires:	zlib-devel >= 1.2.13
 %if %{with doc}
 BuildRequires:	python3-breathe
+BuildRequires:	python3-docutils >= 0.18.1
 BuildRequires:	python3-recommonmark
 BuildRequires:	python3-six
 BuildRequires:	python3-sphinx_press_theme
@@ -65,8 +66,8 @@ BuildRequires:	OpenGL-glut-devel
 BuildRequires:	glew-devel >= 1.5.1
 %endif
 Requires:	Imath >= 3.1.6
-Requires:	expat >= 1:2.5.0
-Requires:	minizip-ng >= 3.0.7
+Requires:	expat >= 1:2.6.0
+Requires:	minizip-ng >= 4.0.0
 Requires:	tinyxml >= 2.6.1
 Requires:	yaml-cpp >= 0.8.0
 Requires:	zlib >= 1.2.13
@@ -181,8 +182,8 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 %cmake -B build \
 	-DCMAKE_CONFIGURATION_TYPES=PLD \
 	-DCMAKE_CXX_STANDARD=14 \
-	%{cmake_on_off doc OCIO_BUILD_DOCS} \
-	%{cmake_on_off java OCIO_BUILD_JAVA} \
+	-DOCIO_BUILD_DOCS=%{__ON_OFF doc} \
+	-DOCIO_BUILD_JAVA=%{__ON_OFF java} \
 	%{!?with_sse2:-DOCIO_USE_SSE2=OFF} \
 	%{!?with_sse3:-DOCIO_USE_SSE3=OFF} \
 	%{!?with_ssse3:-DOCIO_USE_SSSE3=OFF} \
@@ -223,7 +224,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc CHANGELOG.md LICENSE README.md
+%doc CHANGELOG.md LICENSE README.md SECURITY.md
 %attr(755,root,root) %{_bindir}/ocioarchive
 %attr(755,root,root) %{_bindir}/ociobakelut
 %attr(755,root,root) %{_bindir}/ociocheck
