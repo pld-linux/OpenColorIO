@@ -23,13 +23,13 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	2.5.0
-Release:	2
+Version:	2.5.2
+Release:	1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	41d6b62ac672ed333ebfdcc1108407e0
+# Source0-md5:	e74133e3ef4f633bbcd710e3a92e68c2
 Patch0:		%{name}-java.patch
 URL:		http://opencolorio.org/
 BuildRequires:	Imath-devel >= 3.1.6
