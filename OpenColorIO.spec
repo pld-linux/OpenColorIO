@@ -23,13 +23,13 @@
 Summary:	Complete color management solution
 Summary(pl.UTF-8):	Kompletny pakiet do zarządzania kolorami
 Name:		OpenColorIO
-Version:	2.5.2
+Version:	2.6.0
 Release:	1
 License:	BSD
 Group:		Libraries
 #Source0Download: https://github.com/imageworks/OpenColorIO/releases
 Source0:	https://github.com/imageworks/OpenColorIO/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	e74133e3ef4f633bbcd710e3a92e68c2
+# Source0-md5:	0f965eec8d6f344033849f60b9f9be0c
 Patch0:		%{name}-java.patch
 URL:		http://opencolorio.org/
 BuildRequires:	Imath-devel >= 3.1.6
@@ -38,7 +38,7 @@ BuildRequires:	cmake >= 3.14
 BuildRequires:	expat-devel >= 1:2.6.0
 %{?with_java:BuildRequires:	jdk}
 BuildRequires:	lcms2-devel >= 2.2
-BuildRequires:	libstdc++-devel >= 6:5
+BuildRequires:	libstdc++-devel >= 6:7
 BuildRequires:	minizip-ng-devel >= 4.0.0
 BuildRequires:	pkgconfig
 BuildRequires:	pystring-devel >= 1.1.3
@@ -127,7 +127,7 @@ Summary:	Header files for OpenColorIO library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki OpenColorIO
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	libstdc++-devel >= 6:5
+Requires:	libstdc++-devel >= 6:7
 
 %description devel
 Header files for OpenColorIO library.
@@ -176,12 +176,14 @@ Wiązanie Pythona do biblioteki OpenColorIO.
 %patch -P0 -p1
 
 %build
+%if %{with java}
 # required for cmake to find JNI headers/libs when lib64 is in use
-%{?with_java:export JAVA_HOME=%{_jvmlibdir}/java}
+export JAVA_HOME=%{_jvmlibdir}/java
+%endif
 
 %cmake -B build \
 	-DCMAKE_CONFIGURATION_TYPES=PLD \
-	-DCMAKE_CXX_STANDARD=14 \
+	-DCMAKE_CXX_STANDARD=17 \
 	-DOCIO_BUILD_DOCS=%{__ON_OFF doc} \
 	-DOCIO_BUILD_JAVA=%{__ON_OFF java} \
 	%{!?with_sse2:-DOCIO_USE_SSE2=OFF} \
@@ -235,7 +237,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/ocioperf
 %attr(755,root,root) %{_bindir}/ociowrite
 %{_libdir}/libOpenColorIO.so.*.*.*
-%ghost %{_libdir}/libOpenColorIO.so.2.5
+%ghost %{_libdir}/libOpenColorIO.so.2.6
 
 %files convert
 %defattr(644,root,root,755)
