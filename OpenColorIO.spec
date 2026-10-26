@@ -210,7 +210,7 @@ rm -rf $RPM_BUILD_ROOT
 # not needed when installing to /usr
 %{__rm} $RPM_BUILD_ROOT%{_datadir}/ocio/setup_ocio.sh
 # packaged as %doc
-%{__rm} -r $RPM_BUILD_ROOT%{_docdir}/OpenColorIO
+%{?with_doc:%{__rm} -r $RPM_BUILD_ROOT%{_docdir}/OpenColorIO}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -259,9 +259,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_pkgconfigdir}/OpenColorIO.pc
 %{_libdir}/cmake/OpenColorIO
 
+%if %{with doc}
 %files apidocs
 %defattr(644,root,root,755)
 %doc build/docs/build-html/{_images,_static,api,aswf,concepts,configurations,guides,quick_start,releases,tutorials,*.html,*.js}
+%endif
 
 %if %{with java}
 %files -n java-OpenColorIO
